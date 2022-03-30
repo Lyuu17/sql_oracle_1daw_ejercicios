@@ -464,17 +464,17 @@ EXECUTE proc_ej10();
 CREATE OR REPLACE FUNCTION Busca_Emple_Parque(NOMBRE VARCHAR2)
 RETURN VARCHAR2
 AS
-    p_dni EMPLE_PARQUE.DNI_EMPLE%TYPE;
-    p_averias NUMBER;
+    v_dni EMPLE_PARQUE.DNI_EMPLE%TYPE;
+    v_averias NUMBER;
 BEGIN
-    SELECT DNI_EMPLE INTO p_dni FROM EMPLE_PARQUE WHERE UPPER(NOM_EMPLEADO) LIKE '%' || UPPER(NOMBRE) || '%';
+    SELECT DNI_EMPLE INTO v_dni FROM EMPLE_PARQUE WHERE UPPER(NOM_EMPLEADO) LIKE '%' || UPPER(NOMBRE) || '%';
     
-    SELECT COUNT(*) INTO p_averias FROM AVERIAS_PARQUE WHERE DNI_EMPLE = p_dni;
-    IF p_averias = 0 THEN
+    SELECT COUNT(*) INTO v_averias FROM AVERIAS_PARQUE WHERE DNI_EMPLE = v_dni;
+    IF v_averias = 0 THEN
         RETURN '0';
     END IF;
     
-    RETURN p_dni;
+    RETURN v_dni;
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
         RETURN NULL;
@@ -488,40 +488,34 @@ AS
         JOIN ATRACCIONES ON ATRACCIONES.COD_ATRACCION = AVERIAS_PARQUE.COD_ATRACCION
         WHERE DNI_EMPLE = DNI;
 
-    p_curAverias c_getAverias%ROWTYPE;
-    p_resultado AVERIAS_PARQUE.DNI_EMPLE%TYPE;
+    v_resultado AVERIAS_PARQUE.DNI_EMPLE%TYPE;
     
-    p_averiasAcabadas NUMBER;
-    p_averiasSinAcabar NUMBER;
+    v_averiasAcabadas NUMBER;
+    v_averiasSinAcabar NUMBER;
     
     e_sinAverias EXCEPTION;
     e_noExiste EXCEPTION;
 BEGIN
-    p_resultado := Busca_Emple_Parque(NOMBRE);
+    v_resultado := Busca_Emple_Parque(NOMBRE);
 
-    IF p_resultado = '0' THEN
+    IF v_resultado = '0' THEN
         RAISE e_sinAverias;
     END IF;
     
-    IF p_resultado IS NULL THEN
+    IF v_resultado IS NULL THEN
         RAISE e_noExiste;
     END IF;
     
-    OPEN c_getAverias(p_resultado);
-    LOOP
-        FETCH c_getAverias INTO p_curAverias;
-        EXIT WHEN c_getAverias%NOTFOUND;
-        
-        dbms_output.put_line('ATRACCIÓN NOMBRE: ' || p_curAverias.NOM_ATRACCION || ', DIA DE LA SEMANA: ' || p_curAverias.DIASEMANA);
+    FOR v_curAverias IN c_getAverias(v_resultado) LOOP
+        dbms_output.put_line('ATRACCIÓN NOMBRE: ' || v_curAverias.NOM_ATRACCION || ', DIA DE LA SEMANA: ' || v_curAverias.DIASEMANA);
     END LOOP;
-    CLOSE c_getAverias;
     
-    SELECT SUM(DECODE(FECHA_ARREGLO, NULL, 0, 1)) "ACABADAS", SUM(DECODE(FECHA_ARREGLO, NULL, 1, 0)) "SINACABAR" INTO p_averiasAcabadas, p_averiasSinAcabar
+    SELECT SUM(DECODE(FECHA_ARREGLO, NULL, 0, 1)) "ACABADAS", SUM(DECODE(FECHA_ARREGLO, NULL, 1, 0)) "SINACABAR" INTO v_averiasAcabadas, v_averiasSinAcabar
     FROM AVERIAS_PARQUE
     JOIN ATRACCIONES ON ATRACCIONES.COD_ATRACCION = AVERIAS_PARQUE.COD_ATRACCION
-    WHERE DNI_EMPLE = p_resultado;
+    WHERE DNI_EMPLE = v_resultado;
     
-    dbms_output.put_line('ARREGLOS ACABADOS: ' || p_averiasAcabadas || ', ARREGLOS SIN ACABAR: ' || p_averiasSinAcabar);
+    dbms_output.put_line('ARREGLOS ACABADOS: ' || v_averiasAcabadas || ', ARREGLOS SIN ACABAR: ' || v_averiasSinAcabar);
     
 EXCEPTION
     WHEN e_sinAverias THEN
