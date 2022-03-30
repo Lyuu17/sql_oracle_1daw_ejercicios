@@ -189,7 +189,7 @@ END;
 
 EXECUTE proc_ej6();
 
---ej7
+--ej7 (NO NESTED CURSOR)
 CREATE OR REPLACE FUNCTION BUSCAR_DNI(p_nombreDuenho VARCHAR2)
 RETURN VARCHAR2
 AS
@@ -258,6 +258,81 @@ BEGIN
         dbms_output.put_line('Total animales: ' || v_totalAnimales);
         
         CLOSE c_c2;
+    END IF;
+
+END;
+/
+
+EXECUTE proc_ej7('asd');
+
+--ej7 (NESTED CURSOR y FOREACH)
+CREATE OR REPLACE FUNCTION BUSCAR_DNI(p_nombreDuenho VARCHAR2)
+RETURN VARCHAR2
+AS
+    v_dni DUENHOS.DNI%TYPE;
+BEGIN
+    SELECT DNI INTO v_dni FROM DUENHOS WHERE UPPER(NOMBRE) LIKE '%' || UPPER(p_nombreDuenho) || '%' AND ROWNUM = 1;
+    
+    RETURN v_dni;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN NULL;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE proc_ej7(p_nombreDuenho VARCHAR2)
+AS
+    CURSOR c_getDueños IS
+        SELECT DNI, NOMBRE, DIRECCION FROM DUENHOS;
+    CURSOR c_getDueño(D DUENHOS.DNI%TYPE) IS
+        SELECT DNI, NOMBRE, DIRECCION FROM DUENHOS WHERE DNI = D;
+
+    CURSOR c_getAnimal(DNI ANIMALES.DNI_DUENHO%TYPE) IS
+        SELECT IDENT, NOMBRE, ESPECIE
+        FROM ANIMALES WHERE DNI_DUENHO = DNI;
+
+    CURSOR c_getVisitas(I ANIMALES.DNI_DUENHO%TYPE) IS
+        SELECT FH_VISITA, NOMBRE, MOTIVO, PRECIO FROM VISITAS
+        LEFT JOIN VETERINARIOS ON VETERINARIOS.NUMCOLEGIADO = VISITAS.NUMCOLEGIADO
+        WHERE IDENT_ANIMAL = I;
+
+    v_dni DUENHOS.DNI%TYPE;
+    
+    v_totalVisitas NUMBER DEFAULT 0;
+    v_sumaPrecioVisitas NUMBER DEFAULT 0;
+    v_totalAnimales NUMBER DEFAULT 0;
+BEGIN
+    v_dni := BUSCAR_DNI(p_nombreDuenho);
+    
+    --si DNI es NULL
+    IF v_dni IS NULL THEN
+        FOR v_curDueño IN c_getDueños LOOP
+            dbms_output.put_line('DNI: ' || v_curDueño.DNI || ', NOMBRE: ' || v_curDueño.NOMBRE || ', DIRECCION: ' || v_curDueño.DIRECCION);
+
+            FOR v_curAnimales IN c_getAnimal(v_curDueño.DNI) LOOP
+                dbms_output.put_line('IDENT: ' || v_curAnimales.IDENT || ', NOMBRE: ' || v_curAnimales.NOMBRE || ', ESPECIE: ' || v_curAnimales.ESPECIE);
+            END LOOP;
+        END LOOP;
+    ELSE
+        --mostrar por DNI
+        FOR v_curDueño IN c_getDueño(v_dni) LOOP
+            dbms_output.put_line('DNI: ' || v_curDueño.DNI || ', NOMBRE: ' || v_curDueño.NOMBRE || ', DIRECCION: ' || v_curDueño.DIRECCION);
+
+            FOR v_curAnimales IN c_getAnimal(v_curDueño.DNI) LOOP
+                dbms_output.put_line('IDENT: ' || v_curAnimales.IDENT || ', NOMBRE: ' || v_curAnimales.NOMBRE || ', ESPECIE: ' || v_curAnimales.ESPECIE);
+                
+                FOR v_curVisitas IN c_getVisitas(v_curAnimales.IDENT) LOOP
+                    dbms_output.put_line('Fecha y Hora Visita: ' || v_curVisitas.FH_VISITA || ', NOMBRE VET: ' || v_curVisitas.NOMBRE || ', MOTIVO: ' || v_curVisitas.MOTIVO);
+                END LOOP;
+            END LOOP;
+        END LOOP;
+        
+        SELECT COUNT(ANIMALES.IDENT), COUNT(VISITAS.IDENT_ANIMAL), SUM(PRECIO) INTO v_totalAnimales, v_totalVisitas, v_sumaPrecioVisitas FROM VISITAS 
+        RIGHT JOIN ANIMALES ON ANIMALES.IDENT = VISITAS.IDENT_ANIMAL
+        WHERE ANIMALES.DNI_DUENHO = v_dni;
+        
+        dbms_output.put_line('Total visitas: ' || v_totalVisitas || ', suma total visitas: ' || v_sumaPrecioVisitas || '€');
+        dbms_output.put_line('Total animales: ' || v_totalAnimales);
     END IF;
 
 END;
