@@ -1,0 +1,7 @@
+CREATE TABLE ejemplo2 (
+	dni VARCHAR2(10) NOT NULL,
+	nombre VARCHAR(20) DEFAULT 'No definido',
+	usuario VARCHAR(20) UID PRIMARY KEY
+)
+
+INSERT INTO ejemplo2 (dni) VALUES ('0000000000')

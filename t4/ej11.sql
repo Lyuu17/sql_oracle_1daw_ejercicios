@@ -1,0 +1,2 @@
+ALTER TABLE pedidos ADD pvp NUMBER(6, 2);
+ALTER TABLE ventas ADD pvp NUMBER(6, 2);
