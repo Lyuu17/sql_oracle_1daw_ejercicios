@@ -404,33 +404,19 @@ AS
         WHERE MATRICULA = MAT
         ORDER BY FECHA_ENTRADA
         FOR UPDATE;
-        
-    
-    v_curCoches c_getCoches%ROWTYPE;
-    v_curArreglos c_getArreglos%ROWTYPE;
 BEGIN
-    OPEN c_getCoches;
-    LOOP
-        FETCH c_getCoches INTO v_curCoches;
-        EXIT WHEN c_getCoches%NOTFOUND;
-        
+    FOR v_curCoches IN c_getCoches LOOP
         dbms_output.put_line('Matricula: ' || v_curCoches.MATRICULA || ', MODELO: ' || v_curCoches.MODELO || ', '  
             || v_curCoches.ANHO_MATRICULA || ', NCLIENTE: ' || v_curCoches.NCLIENTE);
 
-        OPEN c_getArreglos(v_curCoches.MATRICULA);
-        LOOP
-            FETCH c_getArreglos INTO v_curArreglos;
-            EXIT WHEN c_getArreglos%NOTFOUND;
-            
+        FOR v_curArreglos IN c_getArreglos(v_curCoches.MATRICULA) LOOP
             IF c_getArreglos%ROWCOUNT = v_curArreglos.ROWNUM THEN
                 UPDATE ARREGLOS SET IMPORTE = IMPORTE - (10 * IMPORTE / 100) WHERE CURRENT OF c_getArreglos;
             END IF;
             
             dbms_output.put_line(' -- ' || v_curArreglos.FECHA_ENTRADA || ', salida: ' || v_curArreglos.FECHA_SALIDA || ', importe: ' || v_curArreglos.IMPORTE);
         END LOOP;
-        CLOSE c_getArreglos;
     END LOOP;
-    CLOSE c_getCoches;
 END;
 /
 
