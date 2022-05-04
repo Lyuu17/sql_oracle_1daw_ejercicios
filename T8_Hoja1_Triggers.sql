@@ -88,12 +88,20 @@ EXCEPTION
 END;
 /
 
+
 CREATE OR REPLACE TRIGGER tgr_ej5
 AFTER INSERT OR DELETE
 ON EMPLOYEES
 DECLARE
+FOR EACH ROW
 BEGIN
-    proc_ej5();
+    -- no incluye si un empleado es cambiado de departamento
+    -- mas eficiente que llamar el procedimiento?
+    IF INSERTING THEN
+        UPDATE DEPARTMENTS SET N_EMPLEADOS = N_EMPLEADOS + 1 FROM DEPARTMENT_ID = :new.DEPARTMENT_ID;
+    ELSIF DELETING THEN
+        UPDATE DEPARTMENTS SET N_EMPLEADOS = N_EMPLEADOS - 1 FROM DEPARTMENT_ID = :new.DEPARTMENT_ID;
+    END IF;
 END;
 /
 
