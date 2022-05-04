@@ -1,0 +1,19 @@
+﻿CREATE TABLE AUTORES (idAutor integer PRIMARY KEY, nombre VARCHAR(50));
+CREATE TABLE LIBROS ( IDLibro integer PRIMARY key, 
+     titulo VARCHAR(70), numPaginas integer, fechaPub date, idAutor integer);
+	 
+ALTER TABLE LIBROS ADD FOREIGN KEY (idAutor) REFERENCES AUTORES(idAutor);
+INSERT INTO AUTORES VALUES (3,'Miguel de Cervantes');
+INSERT INTO AUTORES VALUES (2,'Agustin García Calvo');
+INSERT INTO AUTORES VALUES (1,'José Luis Sampedro');
+INSERT INTO AUTORES VALUES (4,'CAMUS');
+INSERT INTO AUTORES VALUES (5,'Julio Llamazares');
+INSERT INTO AUTORES VALUES (6,'Quevedo');
+
+INSERT INTO LIBROS VALUES (1,'Don Quijote de la Mancha',1300,'01-01-1605',3);
+INSERT INTO LIBROS VALUES (2,'Actualidades',400,'01-01-1980',2);
+INSERT INTO LIBROS VALUES (3,'Escribir es vivir',290,'01-01-2006',1);
+INSERT INTO LIBROS VALUES (4,'EL Hombre Revelde',350,'01-01-1982',4);
+INSERT INTO LIBROS VALUES (5,'EL Cielo de Madrid',250,'01-01-2005',5);
+INSERT INTO LIBROS VALUES (6,'La vida del Buscón',200,'01-01-1640',6);
+INSERT INTO LIBROS VALUES (7,'Novelas Ejemplares',250,'01-01-1616',3);
