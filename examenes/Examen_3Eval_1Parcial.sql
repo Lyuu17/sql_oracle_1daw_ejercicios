@@ -37,8 +37,6 @@ EXCEPTION
                     SELECT CUENTAS.NIF_TITULAR INTO v_nif FROM CUENTAS WHERE NIF_TITULAR = p_nif;
                     RETURN v_nif;
                 EXCEPTION WHEN NO_DATA_FOUND THEN
-                    SELECT NUM_SUCURSAL INTO v_numSucursalDirector FROM SUCURSALES
-                    WHERE UPPER(DIRECTOR) LIKE '%ANTONIO%';
                     RETURN v_numSucursalDirector;
                 END;    
         END;
